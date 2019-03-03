@@ -18,6 +18,7 @@ bool CSphere::hitV(const CRay& vRay, float vMinT, float vMaxT, SHitRecord& voRec
 			voRec.t = temp;
 			voRec.p = vRay.pointAtParameter(voRec.t);
 			voRec.normal = (voRec.p - m_Center) / m_Radius;
+			voRec.pMaterial = m_pMaterial;
 			return true;
 		}
 		temp = (-b + sqrt(discriminant)) / a;
@@ -26,6 +27,7 @@ bool CSphere::hitV(const CRay& vRay, float vMinT, float vMaxT, SHitRecord& voRec
 			voRec.t = temp;
 			voRec.p = vRay.pointAtParameter(voRec.t);
 			voRec.normal = (voRec.p - m_Center) / m_Radius;
+			voRec.pMaterial = m_pMaterial;
 			return true;
 		}
 	}
