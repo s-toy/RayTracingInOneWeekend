@@ -5,4 +5,5 @@ add_executable(
 		"src/hitableList.cpp"
 		"src/lambertian.cpp"
 		"src/metal.cpp"
+		"src/dielectric.cpp"
 )

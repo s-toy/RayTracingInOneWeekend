@@ -7,8 +7,9 @@
 #include "material.h"
 #include "lambertian.h"
 #include "metal.h"
+#include "dielectric.h"
 
-#define NUM_HITABLE 4
+#define NUM_HITABLE 5
 #define MAX_SCATTER_DEPTH 50
 
 vec3 color(const CRay& vRay, const CHitable* vWorld, int vScatterDepth)
@@ -36,6 +37,40 @@ vec3 color(const CRay& vRay, const CHitable* vWorld, int vScatterDepth)
 	}
 }
 
+CHitable* randomScene()
+{
+	int n = 500;
+	CHitable** ppList = new CHitable*[n + 1];
+	ppList[0] = new CSphere(vec3(0, -1000, 0), 1000, new CLambertian(vec3(0.5, 0.5, 0.5)));
+
+	int i = 1;
+	for (int a = -11; a < 11; a++)
+	{
+		for (int b = -11; b < 11; b++)
+		{
+			float chooseMat = rand_0_1();
+			vec3 center(a + 0.9 * rand_0_1(), 0.2, b + 0.9 * rand_0_1());
+			if ((center - vec3(4, 0.2, 0)).length() > 0.9)
+			{
+				if (chooseMat < 0.8)
+				{
+					ppList[i++] = new CSphere(center, 0.2, new CLambertian(vec3(rand_0_1()*rand_0_1(), rand_0_1()*rand_0_1(), rand_0_1()*rand_0_1())));
+				}
+				else if (chooseMat < 0.95)
+				{
+					ppList[i++] = new CSphere(center, 0.2, new CMetal(vec3(0.5*(1 + rand_0_1()), 0.5*(1 + rand_0_1()), 0.5*(1 + rand_0_1())), rand_0_1()));
+				}
+				else
+				{
+					ppList[i++] = new CSphere(center, 0.2, new CDielectric(1.5));
+				}
+			}
+		}
+	}
+
+	return new CHitableList(ppList, i);
+}
+
 int main()
 {
 	int nx = 200;
@@ -45,13 +80,7 @@ int main()
 	std::ofstream ofs("output.ppm");
 	ofs << "P3\n" << nx << " " << ny << "\n255\n";
 
-	CHitable* pHitableSet[NUM_HITABLE];
-	pHitableSet[0] = new CSphere(vec3(0, 0, -1), 0.5, new CLambertian(vec3(0.8, 0.3, 0.3)));
-	pHitableSet[1] = new CSphere(vec3(0, -100.5, -1), 100, new CLambertian(vec3(0.8, 0.8, 0.0)));
-	pHitableSet[2] = new CSphere(vec3(1, 0, -1), 0.5, new CMetal(vec3(0.8, 0.6, 0.2), 0.3));
-	pHitableSet[3] = new CSphere(vec3(-1, 0, -1), 0.5, new CMetal(vec3(0.8, 0.8, 0.8), 1.0));
-
-	CHitable* pWorld = new CHitableList(pHitableSet, NUM_HITABLE);
+	CHitable* pWorld = randomScene();
 
 	CCamera camera;
 
@@ -81,9 +110,6 @@ int main()
 			ofs << ir << " " << ig << " " << ib << "\n";
 		}
 	}
-
-	for (int i = 0; i < NUM_HITABLE; ++i) { delete pHitableSet[i]; }
-	delete pWorld;
 
 	return EXIT_SUCCESS;
 }

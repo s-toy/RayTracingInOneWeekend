@@ -12,7 +12,31 @@ static vec3 randomInUnitSphere()
 	return p;
 }
 
-static vec3 reflect(const vec3& vVector, const vec3& vNormal)
+static vec3 reflect(const vec3& vIncidentVec, const vec3& vNormal)
 {
-	return vVector - 2 * dot(vVector, vNormal) * vNormal;
+	return vIncidentVec - 2 * dot(vIncidentVec, vNormal) * vNormal;
+}
+
+static bool refract(const vec3& vIncidentVec, const vec3& vNormal, float vEta, vec3& voRefracted)
+{
+	vec3 uv = unit_vector(vIncidentVec);
+	float dt = dot(uv, vNormal);
+	float discriminant = 1.0 - vEta * vEta * (1 - dt * dt);
+
+	if (discriminant > 0)
+	{
+		voRefracted = vEta * (uv - vNormal * dt) - vNormal * sqrt(discriminant);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static float schlick(float vCosine, float vRefractionIndex)
+{
+	float r0 = (1 - vRefractionIndex) / (1 + vRefractionIndex);
+	r0 = r0 * r0;
+	return r0 + (1 - r0) * pow((1 - vCosine), 5);
 }
