@@ -1,6 +1,5 @@
 #include <fstream>
 #include <ctime>
-#include <omp.h>
 #include "sphere.h"
 #include "hitableList.h"
 #include "camera.h"
@@ -55,11 +54,11 @@ CHitable* randomScene()
 			vec3 center(a + 0.9 * rand_0_1(), 0.2, b + 0.9 * rand_0_1());
 			if ((center - vec3(4, 0.2, 0)).length() > 0.9)
 			{
-				if (chooseMat < 0.5)
+				if (chooseMat < 0.8)
 				{
 					ppList[i++] = new CSphere(center, 0.2, new CLambertian(vec3(rand_0_1()*rand_0_1(), rand_0_1()*rand_0_1(), rand_0_1()*rand_0_1())));
 				}
-				else if (chooseMat < 0.8)
+				else if (chooseMat < 0.95)
 				{
 					ppList[i++] = new CSphere(center, 0.2, new CMetal(vec3(0.5*(1 + rand_0_1()), 0.5*(1 + rand_0_1()), 0.5*(1 + rand_0_1())), 0.5 * rand_0_1()));
 				}
@@ -82,9 +81,9 @@ int main()
 {
 	srand(time(NULL));
 
-	int nx = 1200 / 3;
-	int ny = 800 / 3;
-	int ns = 10;
+	int nx = 1920;
+	int ny = 1080;
+	int ns = 100;
 
 	std::ofstream ofs("output.ppm");
 	ofs << "P3\n" << nx << " " << ny << "\n255\n";
@@ -118,6 +117,8 @@ int main()
 			int ib = int(255.99 * col[2]);
 			ofs << ir << " " << ig << " " << ib << "\n";
 		}
+
+		std::cout << "finished: " << 100 * float(ny - k) / ny << "%" << std::endl;
 	}
 
 	time_t endTime = clock();
