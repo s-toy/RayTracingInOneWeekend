@@ -1,5 +1,6 @@
 #include <fstream>
 #include <ctime>
+#include <omp.h>
 #include "sphere.h"
 #include "hitableList.h"
 #include "camera.h"
@@ -44,6 +45,8 @@ CHitable* randomScene()
 	ppList[0] = new CSphere(vec3(0, -1000, 0), 1000, new CLambertian(vec3(0.5, 0.5, 0.5)));
 
 	int i = 1;
+
+#pragma omp parallel for
 	for (int a = -11; a < 11; a++)
 	{
 		for (int b = -11; b < 11; b++)
@@ -52,13 +55,13 @@ CHitable* randomScene()
 			vec3 center(a + 0.9 * rand_0_1(), 0.2, b + 0.9 * rand_0_1());
 			if ((center - vec3(4, 0.2, 0)).length() > 0.9)
 			{
-				if (chooseMat < 0.8)
+				if (chooseMat < 0.5)
 				{
 					ppList[i++] = new CSphere(center, 0.2, new CLambertian(vec3(rand_0_1()*rand_0_1(), rand_0_1()*rand_0_1(), rand_0_1()*rand_0_1())));
 				}
-				else if (chooseMat < 0.95)
+				else if (chooseMat < 0.8)
 				{
-					ppList[i++] = new CSphere(center, 0.2, new CMetal(vec3(0.5*(1 + rand_0_1()), 0.5*(1 + rand_0_1()), 0.5*(1 + rand_0_1())), rand_0_1()));
+					ppList[i++] = new CSphere(center, 0.2, new CMetal(vec3(0.5*(1 + rand_0_1()), 0.5*(1 + rand_0_1()), 0.5*(1 + rand_0_1())), 0.5 * rand_0_1()));
 				}
 				else
 				{
@@ -68,23 +71,29 @@ CHitable* randomScene()
 		}
 	}
 
+	ppList[i++] = new CSphere(vec3(0, 1, 0), 1.0, new CDielectric(1.5));
+	ppList[i++] = new CSphere(vec3(-4, 1, 0), 1.0, new CLambertian(vec3(0.4, 0.2, 0.1)));
+	ppList[i++] = new CSphere(vec3(4, 1, 0), 1.0, new CMetal(vec3(0.7, 0.6, 0.5), 0.0));
+
 	return new CHitableList(ppList, i);
 }
 
 int main()
 {
-	int nx = 200;
-	int ny = 100;
-	int ns = 100;
+	srand(time(NULL));
+
+	int nx = 1200 / 3;
+	int ny = 800 / 3;
+	int ns = 10;
 
 	std::ofstream ofs("output.ppm");
 	ofs << "P3\n" << nx << " " << ny << "\n255\n";
 
 	CHitable* pWorld = randomScene();
 
-	CCamera camera;
+	CCamera camera(vec3(13, 2, 3), vec3(0, 0, 0), vec3(0, 1, 0), 20, float(nx) / float(ny), 0.1, 10.0);
 
-	srand(time(NULL));
+	time_t startTime = clock();
 
 	for (int k = ny - 1; k >= 0; k--)
 	{
@@ -110,6 +119,12 @@ int main()
 			ofs << ir << " " << ig << " " << ib << "\n";
 		}
 	}
+
+	time_t endTime = clock();
+	float deltaTime = (float)(endTime - startTime) / CLOCKS_PER_SEC;
+	std::cout << "time: " << deltaTime << std::endl;
+
+	system("pause");
 
 	return EXIT_SUCCESS;
 }
